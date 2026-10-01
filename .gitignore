@@ -1,0 +1,3 @@
+node_modules/
+.wrangler/
+_verify_mode.mjs

@@ -97,7 +97,13 @@ function parseUrlLike(link, type) {
     fp: u.searchParams.get('fp') || '',
     alpn: u.searchParams.get('alpn') || '',
     flow: u.searchParams.get('flow') || '',
+    params: Object.fromEntries(u.searchParams.entries()),
   };
+}
+
+function setOrDeleteParam(params, key, value) {
+  if (value) params.set(key, value);
+  else params.delete(key);
 }
 
 function parseRawLinks(input) {
@@ -178,27 +184,32 @@ function encodeVmess(node) {
 
 function encodeVless(node) {
   const url = new URL(`vless://${encodeURIComponent(node.uuid)}@${node.server}:${node.port}`);
-  url.searchParams.set('type', node.network || 'ws');
-  if (node.tls) url.searchParams.set('security', 'tls');
-  if (node.host) url.searchParams.set('host', node.host);
-  if (node.sni) url.searchParams.set('sni', node.sni);
-  if (node.path) url.searchParams.set('path', node.path);
-  if (node.alpn) url.searchParams.set('alpn', node.alpn);
-  if (node.fp) url.searchParams.set('fp', node.fp);
-  if (node.flow) url.searchParams.set('flow', node.flow);
+  const params = new URLSearchParams(node.params || {});
+  params.set('type', node.network || 'ws');
+  if (node.tls) params.set('security', 'tls');
+  else params.delete('security');
+  setOrDeleteParam(params, 'host', node.host);
+  setOrDeleteParam(params, 'sni', node.sni);
+  setOrDeleteParam(params, 'path', node.path);
+  setOrDeleteParam(params, 'alpn', node.alpn);
+  setOrDeleteParam(params, 'fp', node.fp);
+  setOrDeleteParam(params, 'flow', node.flow);
+  url.search = params.toString();
   url.hash = node.name;
   return url.toString();
 }
 
 function encodeTrojan(node) {
   const url = new URL(`trojan://${encodeURIComponent(node.password)}@${node.server}:${node.port}`);
-  if (node.network) url.searchParams.set('type', node.network);
-  if (node.tls) url.searchParams.set('security', 'tls');
-  if (node.host) url.searchParams.set('host', node.host);
-  if (node.sni) url.searchParams.set('sni', node.sni);
-  if (node.path) url.searchParams.set('path', node.path);
-  if (node.alpn) url.searchParams.set('alpn', node.alpn);
-  if (node.fp) url.searchParams.set('fp', node.fp);
+  const params = new URLSearchParams(node.params || {});
+  if (node.network) params.set('type', node.network);
+  if (node.tls) params.set('security', 'tls');
+  setOrDeleteParam(params, 'host', node.host);
+  setOrDeleteParam(params, 'sni', node.sni);
+  setOrDeleteParam(params, 'path', node.path);
+  setOrDeleteParam(params, 'alpn', node.alpn);
+  setOrDeleteParam(params, 'fp', node.fp);
+  url.search = params.toString();
   url.hash = node.name;
   return url.toString();
 }
